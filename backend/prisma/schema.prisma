@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OFFICER
+  MODERATOR
+  ADMIN
+}
+
+enum RentCycle {
+  monthly
+  yearly
+}
+
+enum ListingStatus {
+  draft
+  published
+  under_offer
+  transferred
+  withdrawn
+}
+
+enum InterestStatus {
+  open
+  shortlisted
+  declined
+  accepted
+}
+
+enum TransferStatus {
+  pending_landlord
+  approved
+  rejected
+  cancelled
+  completed
+}
+
+model User {
+  id                  String    @id @default(uuid())
+  service_number_hash String    @unique
+  official_email      String    @unique
+  full_name           String
+  rank                String
+  station             String
+  role                Role      @default(OFFICER)
+  phone               String?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  listings            Listing[]
+  interests           Interest[]        @relation("InterestOfficer")
+  transfersFrom       Transfer[]        @relation("TransferFrom")
+  transfersTo         Transfer[]        @relation("TransferTo")
+  sessions            Session[]
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    String
+  token_hash String
+  ip         String?
+  ua         String?
+  created_at DateTime @default(now())
+  expires_at DateTime
+}
+
+model Listing {
+  id                String         @id @default(uuid())
+  owner             User           @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  owner_id          String
+  title             String
+  city              String
+  state             String
+  base              String
+  geo_area          String?
+  rent_amount       Decimal        @db.Decimal(12, 2)
+  rent_currency     String
+  rent_cycle        RentCycle
+  deposit_amount    Decimal?       @db.Decimal(12, 2)
+  bedrooms          Int
+  bathrooms         Int
+  furnished         Boolean
+  amenities         Json
+  exact_address_enc String
+  available_from    DateTime
+  next_rent_due     DateTime?
+  photos            Json
+  status            ListingStatus  @default(draft)
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  interests         Interest[]
+  transfers         Transfer[]
+}
+
+model Interest {
+  id                    String         @id @default(uuid())
+  listing               Listing        @relation(fields: [listing_id], references: [id], onDelete: Cascade)
+  listing_id            String
+  interested_officer    User           @relation("InterestOfficer", fields: [interested_officer_id], references: [id], onDelete: Cascade)
+  interested_officer_id String
+  message               String
+  status                InterestStatus @default(open)
+  created_at            DateTime       @default(now())
+  updated_at            DateTime       @updatedAt
+}
+
+model Transfer {
+  id               String         @id @default(uuid())
+  listing          Listing        @relation(fields: [listing_id], references: [id], onDelete: Cascade)
+  listing_id       String
+  from_officer     User           @relation("TransferFrom", fields: [from_officer_id], references: [id], onDelete: Cascade)
+  from_officer_id  String
+  to_officer       User           @relation("TransferTo", fields: [to_officer_id], references: [id], onDelete: Cascade)
+  to_officer_id    String
+  proposed_move_in DateTime
+  effective_date   DateTime?
+  status           TransferStatus @default(pending_landlord)
+  consent_pdf_url  String?
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+}
