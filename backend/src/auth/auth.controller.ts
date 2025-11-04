@@ -9,42 +9,30 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() dto: RegisterDto) {
-    const result = await this.authService.register(dto);
-    return {
-      status: 'success',
-      officer: this.sanitiseUser(result.user),
-      tokens: result.tokens,
-    };
-  }
-
-  @Post('verify')
-  async verify(@Body() dto: LoginDto) {
-    return this.authService.verifyOfficer(dto);
+  async register(@Body() dto: RegisterDto): Promise<any> {
+    return this.authService.register(dto);
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto) {
-    const result = await this.authService.login(dto);
-    return {
-      status: 'success',
-      officer: this.sanitiseUser(result.user),
-      tokens: result.tokens,
-    };
+  async login(@Body() dto: LoginDto): Promise<any> {
+    return this.authService.login(dto);
   }
 
   @Post('refresh')
-  async refresh(@Body() dto: RefreshDto) {
-    const result = await this.authService.refreshToken(dto.refresh_token);
-    return {
-      status: 'success',
-      officer: this.sanitiseUser(result.user),
-      tokens: result.tokens,
-    };
-  }
+  async refresh(@Body() dto: RefreshDto): Promise<any> {
+    // Option A: if your service has refreshTokens(refreshToken: string)
+    if ((this.authService as any).refreshTokens) {
+      // Common DTO field names: refreshToken OR token
+      const token = (dto as any).refreshToken ?? (dto as any).token ?? (dto as any).refresh;
+      return (this.authService as any).refreshTokens(token);
+    }
 
-  private sanitiseUser(user: any) {
-    const { service_number_hash, ...rest } = user;
-    return rest;
+    // Option B: if your service already implemented refresh(dto)
+    if ((this.authService as any).refresh) {
+      return (this.authService as any).refresh(dto);
+    }
+
+    // Option C: fallback — surface a clear error if neither exists
+    throw new Error('AuthService is missing both refresh() and refreshTokens() methods');
   }
 }

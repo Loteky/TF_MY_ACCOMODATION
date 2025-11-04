@@ -33,28 +33,23 @@ services:
     build:
       context: ../backend
     env_file:
-      - ../.env
+      - ../backend/.env.example
     environment:
-      PORT: "4000"
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/nhh?schema=public
-      GOOGLE_DRIVE_MOCK: "true"
-      GOOGLE_DRIVE_KEY_FILE: /app/config/service-account.json
-      PRISMA_QUERY_ENGINE_LIBRARY: /app/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
-      NODE_ENV: production
+      GOOGLE_DRIVE_MOCK: 'true'
+      DATA_ENCRYPTION_KEY: super-secret-development-key
     ports:
       - "4000:4000"
     depends_on:
       - postgres
       - redis
       - minio
-    volumes:
-      - ../backend/config/service-account.json:/app/config/service-account.json:ro
 
   frontend:
     build:
       context: ../frontend
     env_file:
-      - ../frontend/.env.local
+      - ../frontend/.env.example
     ports:
       - "3000:3000"
     depends_on:
