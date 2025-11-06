@@ -7,7 +7,10 @@ import { WinstonModule } from 'nest-winston';
 import { winstonLogger } from './common/utils/winston-logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create(AppModule);
+  const port = parseInt(process.env.PORT ?? '4000', 10);
+  await app.listen(port);
+ {
     logger: WinstonModule.createLogger(winstonLogger),
   });
   app.setGlobalPrefix('api');
