@@ -7,27 +7,33 @@ import { WinstonModule } from 'nest-winston';
 import { winstonLogger } from './common/utils/winston-logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const port = parseInt(process.env.PORT ?? '4000', 10);
-  await app.listen(port);
- {
-    logger: WinstonModule.createLogger(winstonLogger),
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger(winstonLogger), // Correct position for logger
   });
+  const port = parseInt(process.env.PORT ?? '4000', 10);
+
+  // Global API prefix and other configurations
   app.setGlobalPrefix('api');
   app.enableCors({
     origin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
     credentials: true,
   });
+
+  // Security middleware
   app.use(helmet({ crossOriginResourcePolicy: false }));
+
+  // Rate limiting
   app.use(
     rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 100,
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // limit each IP to 100 requests per windowMs
       message: 'Too many requests from this client. Please try again later.',
       standardHeaders: true,
       legacyHeaders: false,
     }),
   );
+
+  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -37,7 +43,9 @@ async function bootstrap() {
       validationError: { target: false },
     }),
   );
-  await app.listen(process.env.PORT ?? 4000);
+
+  // Listen on port
+  await app.listen(port);
 }
 
 bootstrap();
