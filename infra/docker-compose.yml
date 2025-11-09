@@ -36,7 +36,7 @@ services:
       - ../.env
     environment:
       PORT: "4000"
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/nhh?schema=public
+      DATABASE_URL: postgresql://we_we_db_user:3bPyFN6eHykAfAb0DuZmBhqXxo5XZ9El@dpg-d485al1r0fns73fr46p0-a.oregon-postgres.render.com/we_we_db
       GOOGLE_DRIVE_MOCK: "true"
       GOOGLE_DRIVE_KEY_FILE: /app/config/service-account.json
       PRISMA_QUERY_ENGINE_LIBRARY: /app/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
